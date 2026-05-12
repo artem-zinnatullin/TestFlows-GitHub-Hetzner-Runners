@@ -19,13 +19,26 @@ LABEL org.opencontainers.image.version="1.10.260403.1003327-fixed"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.authors="TestFlows community"
 
+ENV PYTHONUNBUFFERED=1 \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    PYTHONIOENCODING=utf-8
+
 WORKDIR /app
 
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# Install system dependencies:
+#   - ca-certificates (required for HTTPS)
+#   - openssh-client (ssh, ssh-keygen, ssh-agent — required by testflows for runner management)
+#   - curl, git, procps (common tools needed by testflows runners manager and debugging)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    openssh-client \
+    curl \
+    git \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the exact pinned version + the critical compatibility fix \
