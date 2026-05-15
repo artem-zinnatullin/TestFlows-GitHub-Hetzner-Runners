@@ -47,9 +47,59 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir testflows.github.hetzner.runners==${TESTFLOWS_VERSION} && \
     pip install --no-cache-dir --force-reinstall --no-deps "requests==2.32.3"
 
+# Extract default scripts from the installed package
+# This allows user to supply custom scripts into /etc/testflows-runner-scripts/
+# Without having to create custom logic to copy matching versions of default scripts from python package
+# See https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/tree/main/testflows/github/hetzner/runners/scripts
+RUN mkdir -p /etc/testflows-runner-scripts && python3 << 'PYEOF'
+import importlib.resources as pkg_resources
+import shutil
+import os
+import sys
+
+package = "testflows.github.hetzner.runners.scripts"
+dst = "/etc/testflows-runner-scripts"
+os.makedirs(dst, exist_ok=True)
+
+scripts_to_copy = [
+    "docker.sh",
+    "ipv6.sh",
+    "none.sh",
+    "setup-docker.sh",
+    "setup.sh",
+    "startup-arm64.sh",
+    "startup-x64.sh"
+]
+failed = []
+
+print(f"Copying default testflows-github-hetzner-runners .sh scripts from Python package to {dst} ...")
+
+for filename in scripts_to_copy:
+    dest_path = os.path.join(dst, filename)
+    try:
+        with pkg_resources.as_file(pkg_resources.files(package) / filename) as src_file:
+            shutil.copy(src_file, dest_path)
+            print(f"Copied: {filename} -> {dest_path}")
+    except Exception as e:
+        print(f"ERROR: Failed to copy {filename} -> {dest_path}")
+        print(f"       Reason: {e}")
+        failed.append(filename)
+
+if failed:
+    print(f"\n❌ ERROR: Failed to extract the following default scripts: {failed}")
+    print("   Docker build cannot continue.")
+    sys.exit(1)
+
+print(f"\n✅ All default scripts successfully extracted to: {dst}")
+PYEOF
+
+
 # Create non-root user (security best practice)
 RUN useradd -m -u 1000 runner && \
     chown -R runner:runner /app
+
+RUN chown -R runner:runner /etc/testflows-runner-scripts && \
+    chmod +x /etc/testflows-runner-scripts/*.sh
 
 USER runner
 
