@@ -79,6 +79,8 @@ for filename in scripts_to_copy:
     try:
         with pkg_resources.as_file(pkg_resources.files(package) / filename) as src_file:
             shutil.copy(src_file, dest_path)
+            # Make the script executable
+            os.chmod(dest_path, 0o755)
             print(f"Copied: {filename} -> {dest_path}")
     except Exception as e:
         print(f"ERROR: Failed to copy {filename} -> {dest_path}")
