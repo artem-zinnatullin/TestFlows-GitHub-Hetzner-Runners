@@ -33,7 +33,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Operating System :: POSIX :: Linux",
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     license="Apache-2.0",
     packages=[
         "testflows.github.hetzner.runners",
@@ -55,7 +55,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "PyGithub==2.8.1",
-        "hcloud==2.3.0",
+        "hcloud>=2.13.0,<3",
         "requests-cache==1.3.2",
         "PyYAML==6.0.3",
         "prometheus_client==0.24.1",

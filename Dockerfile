@@ -1,21 +1,24 @@
+# syntax=docker/dockerfile:1
 FROM python:3.12-slim
 
 # === Build argument for the exact testflows package version ===
 # Must be overridden at build time, otherwise the build fails with a clear error.
+# Use "source-code" to install from the local build context instead of PyPI.
 ARG TESTFLOWS_VERSION="PROVIDE_VERSION_VIA_DOCKER_BUILD_ARG"
 
 # Fail fast and loudly if the version was not overridden
 RUN if [ "$TESTFLOWS_VERSION" = "PROVIDE_VERSION_VIA_DOCKER_BUILD_ARG" ] || [ -z "$TESTFLOWS_VERSION" ]; then \
         echo "ERROR: TESTFLOWS_VERSION build argument must be provided!"; \
-        echo "   Example:"; \
-        echo "     docker build --build-arg TESTFLOWS_VERSION=1.10.260403.1003327 ..."; \
+        echo "   Examples:"; \
+        echo "     docker build --build-arg TESTFLOWS_VERSION=source-code ."; \
+        echo "     docker build --build-arg TESTFLOWS_VERSION=1.10.260526.1142432 ."; \
         exit 2; \
     fi
 
 LABEL org.opencontainers.image.title="TestFlows GitHub Hetzner Runners"
 LABEL org.opencontainers.image.description="Autoscaling GitHub Actions self-hosted runners on Hetzner Cloud"
 LABEL org.opencontainers.image.source="https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners"
-LABEL org.opencontainers.image.version="1.10.260403.1003327-fixed"
+LABEL org.opencontainers.image.version="${TESTFLOWS_VERSION}"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.authors="TestFlows community"
 
@@ -41,10 +44,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Install the exact pinned version + the critical compatibility fix \
-# requests-cache==1.2.1 + requests==2.34+ causes pickle NameError for RequestsCookieJar, remove once fixed in upstream
+# Install from local source (TESTFLOWS_VERSION=source-code) or PyPI (any other version),
+# then apply the critical compatibility fix:
+# requests-cache==1.2.1 + requests==2.34+ causes pickle NameError for RequestsCookieJar
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir testflows.github.hetzner.runners==${TESTFLOWS_VERSION} && \
+    if [ "$TESTFLOWS_VERSION" = "source-code" ]; then \
+        echo "Installing testflows.github.hetzner.runners from local source code..."; \
+    else \
+        echo "Installing testflows.github.hetzner.runners==${TESTFLOWS_VERSION} from PyPI..."; \
+    fi
+
+RUN --mount=type=bind,source=.,target=/src,readonly \
+    if [ "$TESTFLOWS_VERSION" = "source-code" ]; then \
+        cp -a /src /tmp/src && \
+        cd /tmp/src && \
+        SOURCE_REVISION="$(date -u +%y%m%d).1$(date -u +%H%M%S)" && \
+        SOURCE_VERSION="1.10.${SOURCE_REVISION}" && \
+        sed -i "s/__VERSION__/${SOURCE_REVISION}/" testflows/github/hetzner/runners/__init__.py && \
+        sed -i "s/__VERSION__/${SOURCE_VERSION}/" setup.py && \
+        pip install --no-cache-dir . ; \
+    else \
+        pip install --no-cache-dir "testflows.github.hetzner.runners==${TESTFLOWS_VERSION}" ; \
+    fi && \
     pip install --no-cache-dir --force-reinstall --no-deps "requests==2.32.3"
 
 # Extract default scripts from the installed package
@@ -112,4 +133,3 @@ EXPOSE 8090
 EXPOSE 9090
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-

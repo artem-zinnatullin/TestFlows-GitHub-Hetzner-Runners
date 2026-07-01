@@ -1,0 +1,7 @@
+.git
+.idea
+dist/
+**/__pycache__
+*.pyc
+testflows.*.egg-info
+.agents

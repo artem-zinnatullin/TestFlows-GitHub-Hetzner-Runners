@@ -80,6 +80,23 @@ class MockServer(Server):
         )
 
 
+def get_server_location(server: Server):
+    """Return server location."""
+    location = getattr(server, "location", None)
+    if location is not None:
+        return location
+    datacenter = getattr(server, "datacenter", None)
+    if datacenter is not None:
+        return getattr(datacenter, "location", None)
+    return None
+
+
+def get_server_location_name(server: Server, default: str = "unknown") -> str:
+    """Return server location name."""
+    location = get_server_location(server)
+    return location.name if location is not None else default
+
+
 def age(server: Server):
     """Return server's age."""
     now = datetime.now(timezone.utc)

@@ -24,7 +24,7 @@ from hcloud.servers.domain import Server
 
 from .actions import Action
 from .config import Config
-from .server import ssh_command, ip_address
+from .server import ssh_command, ip_address, get_server_location_name
 from .scale_up import server_name_prefix, runner_name_prefix, get_volume_name
 from .hclient import HClient as Client
 from .request import request
@@ -170,7 +170,7 @@ def list(args, config: Config):
                 f"{server.id},",
                 f"{ip_address(server)},",
                 f"{server.server_type.name},",
-                f"{server.datacenter.location.name},",
+                f"{get_server_location_name(server)},",
                 f"{server.image.name},",
                 f"{server.image.architecture},",
                 f"{server.image.os_flavor},",
@@ -279,7 +279,7 @@ def delete(args, config: Config):
 
     for server in delete_servers:
         with Action(
-            f"🗑️  Deleting server {server.name} with id {server.id} in {server.datacenter.location.name}"
+            f"🗑️  Deleting server {server.name} with id {server.id} in {get_server_location_name(server)}"
         ):
             server.delete()
 

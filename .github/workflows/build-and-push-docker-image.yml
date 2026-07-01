@@ -4,11 +4,11 @@ on:
   workflow_dispatch:  # Manually trigger from GitHub UI
     inputs:
       testflows_version:
-        description: 'TestFlows package version (e.g. 1.10.260403.1003327)'
+        description: 'PyPI package version (e.g. 1.10.260526.1142432) or "source-code" to install from checked-out repository source'
         required: true
         type: string
       version_tag:
-        description: 'Version tag for image (e.g. 1.10.260403.1003327-fixed)'
+        description: 'Docker image tag (independent of testflows_version), e.g. 1.10.260701.1182516-fixed'
         required: true
         type: string
 
@@ -23,6 +23,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Build configuration
+        run: |
+          echo "testflows_version (package install): ${{ inputs.testflows_version }}"
+          echo "version_tag (docker image tag):     ${{ inputs.version_tag }}"
+          if [ "${{ inputs.testflows_version }}" = "source-code" ]; then
+            echo "Build mode: local source from repository checkout"
+          else
+            echo "Build mode: PyPI install testflows.github.hetzner.runners==${{ inputs.testflows_version }}"
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -43,6 +53,8 @@ jobs:
             type=raw,value=latest
             type=raw,value=${{ inputs.version_tag }}
             type=sha,format=short
+          labels: |
+            org.opencontainers.image.version=${{ inputs.version_tag }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -52,12 +64,19 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Build metadata (shows in GitHub Packages UI)
           build-args: |
             TESTFLOWS_VERSION=${{ inputs.testflows_version }}
 
       - name: Published Image Info
         run: |
+          echo "Package install: ${{ inputs.testflows_version }}"
+          echo "Image tag:       ${{ inputs.version_tag }}"
+          if [ "${{ inputs.testflows_version }}" = "source-code" ]; then
+            echo "Build mode:      local source from repository checkout"
+          else
+            echo "Build mode:      PyPI install"
+          fi
+          echo ""
           echo "✅ Image built & pushed to:"
           echo "   ghcr.io/${{ github.repository_owner }}/testflows-hetzner-runners:latest"
           echo "   ghcr.io/${{ github.repository_owner }}/testflows-hetzner-runners:${{ inputs.version_tag }}"

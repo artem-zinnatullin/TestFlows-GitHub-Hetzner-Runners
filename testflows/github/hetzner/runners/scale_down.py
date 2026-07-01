@@ -40,7 +40,7 @@ from .scale_up import (
     get_runner_server_name,
 )
 from .logger import logger
-from .server import age
+from .server import age, get_server_location_name
 from .config import Config
 from .hclient import HClient as Client
 from .ordered_set import OrderedSet as set
@@ -124,7 +124,7 @@ def delete_server(server: BoundServer, action: str = "delete"):
         error_details = {
             "error": str(e),
             "server_type": server.server_type.name,
-            "location": server.datacenter.location.name,
+            "location": get_server_location_name(server),
             "labels": ",".join(server_labels),
             "timestamp": time.time(),
         }
@@ -133,7 +133,7 @@ def delete_server(server: BoundServer, action: str = "delete"):
             error_type=f"{action}_failed",
             server_name=server.name,
             server_type=server.server_type.name,
-            server_location=server.datacenter.location.name,
+            server_location=get_server_location_name(server),
             error_details=error_details,
         )
 
@@ -207,7 +207,7 @@ def delete_recyclable_server(
 
         def sorting_key(server):
             server_type_name = server.server_type.name
-            server_location_name = server.datacenter.location.name
+            server_location_name = get_server_location_name(server)
             server_age = age(server) if server else 0
             try:
                 return (60 - server_age.minutes) - server_prices[server_type_name][
@@ -629,7 +629,9 @@ def scale_down(
                                 ) as action:
                                     metrics.record_server_deletion(
                                         server_type=powered_off_server.server.server_type.name,
-                                        location=powered_off_server.server.datacenter.location.name,
+                                        location=get_server_location_name(
+                                            powered_off_server.server
+                                        ),
                                         reason="powered_off",
                                     )
                                     delete_server(
@@ -676,7 +678,9 @@ def scale_down(
                                 ) as action:
                                     metrics.record_server_deletion(
                                         server_type=zombie_server.server.server_type.name,
-                                        location=zombie_server.server.datacenter.location.name,
+                                        location=get_server_location_name(
+                                            zombie_server.server
+                                        ),
                                         reason="zombie",
                                     )
                                     delete_server(
@@ -735,7 +739,9 @@ def scale_down(
                                     ):
                                         metrics.record_server_deletion(
                                             server_type=runner_server.server_type.name,
-                                            location=runner_server.datacenter.location.name,
+                                            location=get_server_location_name(
+                                                runner_server
+                                            ),
                                             reason="unused",
                                         )
                                         delete_server(
