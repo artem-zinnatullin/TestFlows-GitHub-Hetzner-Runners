@@ -57,7 +57,7 @@ to avoid any cleanup. Server instances are not shared between jobs.
 
 :✋ Note:
    Currently, Hetzner Cloud server instances are billed on an hourly basis. So a job that takes 1 minute will be billed
-   the same way as for a job that takes 59 minutes. Therefore, unless server reuse is enabled using `server recycling <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Recycling-Powered%E2%80%90Off-Servers>`_, 
+   the same way as for a job that takes 59 minutes. Therefore, unless server reuse is enabled using `server recycling <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Recycling-Powered-Off-Servers>`_, 
    the minimal cost for any job is the cost of the server for one hour plus the cost of one public IPv4 address. 
    If server recycling is used, the amortized cost could be close to per-minute billing depending on server utilization.
 
@@ -77,24 +77,24 @@ to avoid any cleanup. Server instances are not shared between jobs.
   
   Everything is managed by a single command line utility — no Kubernetes, no CRDs, no controllers, no third-party services.
 
-- 💸 **Up to 75× cheaper than GitHub-hosted runners**  
+- 💸 **Up to 33× cheaper than GitHub-hosted runners**  
   
   Hetzner Cloud VMs (like CX or CPX) offer dramatic CI/CD cost savings with better performance and higher parallelism.
   
   +------------------------+-------------------+----------------------------+
   | Platform               | Specs             | Price                      |
   +========================+===================+============================+
-  | GitHub-hosted runner   | 2-core Linux      | $0.008 / minute            |
+  | GitHub-hosted runner   | 2-core Linux      | $0.006 / minute            |
   +------------------------+-------------------+----------------------------+
-  | Hetzner CX22           | 2-core VM         | €0.006 / hour              |
-  |                        |                   | (~$0.0001062 / minute)     |
+  | Hetzner CX23           | 2-core VM         | €0.0096 / hour             |
+  |                        |                   | (~$0.0001818 / minute)     |
   +------------------------+-------------------+----------------------------+
 
   :Calculation:
-     1/0.9411 USD/EUR × 0.006 EUR/hour × 1 hour / 60 minute = 0.0001062 USD / minute,
-     $0.008 / $0.0001062 = ~75.32
+     1/0.88 USD/EUR × 0.0096 EUR/hour × 1 hour / 60 minute = 0.0001818 USD / minute,
+     $0.006 / $0.0001818 = ~33
    
-  That’s the upper bound — based on full hourly utilization and exchange rate as of March 5, 2025.
+  That’s the upper bound — based on full hourly utilization and exchange rate as of June 24, 2026.
   But even if you only hit 10× cheaper in practice,
   you're still saving *a lot*. Best efficiency is when your jobs are frequent or long-lived
   (due to hourly billing).
@@ -124,7 +124,7 @@ The following projects are using **github-hetzner-runners** to enable self-hoste
 
 * ✅ simpler alternative to what GitHub lists in `Recommended Autoscaling Solutions <https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/autoscaling-with-self-hosted-runners#recommended-autoscaling-solutions>`_
 * ✅ cost-efficient on-demand runners using `Hetzner Cloud <https://www.hetzner.com/cloud>`_
-* ✅ supports server recycling to minimize costs
+* ✅ supports server recycling to minimize costs, with optional no-rebuild mode for trusted single-tenant setups
 * ✅ simple configuration, no Webhooks, no need for AWS lambdas, and no need to setup any GitHub application
 * ✅ supports specifying custom runner server types, images, and locations using job labels with fallback options for server types and locations
 * ✅ self-contained program that you can use to deploy, redeploy, and manage the service on a cloud instance
@@ -153,7 +153,8 @@ The following projects are using **github-hetzner-runners** to enable self-hoste
 * `Basic Configuration <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Basic-Configuration>`_
 * `Specifying the Maximum Number of Runners <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Specifying-the-Maximum-Number-of-Runners>`_
 * `Specifying the Maximum Number of Runners Used in Workflow a Run <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Specifying-the-Maximum-Number-of-Runners-Used-in-Workflow-a-Run>`_
-* `Recycling Powered‐Off Servers <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Recycling-Powered‐Off-Servers>`_
+* `Recycling Powered‐Off Servers <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Recycling-Powered-Off-Servers>`_
+* `Recycling Powered‐Off Servers Without Rebuild <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Recycling-Powered-Off-Servers-Without-Rebuild>`_
 * `Skipping Jobs <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Skipping-Jobs>`_
 * `Using Custom Label Prefix <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Using-Custom-Label-Prefix>`_
 * `Jobs That Require the Docker Engine <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Jobs-That-Require-the-Docker-Engine>`_
@@ -162,6 +163,7 @@ The following projects are using **github-hetzner-runners** to enable self-hoste
 * `Specifying The Runner Network <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Specifying-The-Runner-Network>`_
 * `Specifying The Runner Image <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Specifying-The-Runner-Image>`_
 * `Specifying The Custom Runner Server Setup Script <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Specifying-The-Custom-Runner-Server-Setup-Script>`_
+* `Specifying The Custom Runner Server Recycle Script <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Specifying-The-Custom-Runner-Server-Recycle-Script>`_
 * `Specifying The Custom Runner Server Startup Script <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Specifying-The-Custom-Runner-Server-Startup-Script>`_
 * `Disabling Setup or Startup Scripts <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Disabling-Setup-Or-Startup-Scripts>`_
 * `Specifying Standby Runners <https://github.com/testflows/TestFlows-GitHub-Hetzner-Runners/wiki/Specifying-Standby-Runners>`_
