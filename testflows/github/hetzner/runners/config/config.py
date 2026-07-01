@@ -91,6 +91,18 @@ end_of_life = args.end_of_life_type
 meta_label_type = args.meta_label_type
 
 
+def _default_server_type() -> ServerType:
+    return server_type("cx23")
+
+
+def _default_image() -> Image:
+    return image("x86:system:ubuntu-22.04")
+
+
+def _default_volume_location() -> Location:
+    return location("nbg1")
+
+
 @dataclass
 class standby_runner:
     labels: list[str]
@@ -100,8 +112,8 @@ class standby_runner:
 
 @dataclass
 class deploy_:
-    server_type: ServerType = server_type("cx23")
-    image: Image = image("x86:system:ubuntu-22.04")
+    server_type: ServerType = dataclasses.field(default_factory=_default_server_type)
+    image: Image = dataclasses.field(default_factory=_default_image)
     location: Location = None
     setup_script: str = os.path.join(current_dir, "..", "scripts", "deploy", "setup.sh")
 
@@ -133,10 +145,14 @@ class Config:
     max_runners: int = 10
     max_runners_for_label: list[tuple[set[str], int]] = None
     max_runners_in_workflow_run: int = None
-    default_image: Image = image("x86:system:ubuntu-22.04")
-    default_server_type: ServerType = server_type("cx23")
+    default_image: Image = dataclasses.field(default_factory=_default_image)
+    default_server_type: ServerType = dataclasses.field(
+        default_factory=_default_server_type
+    )
     default_location: Location = None
-    default_volume_location: Location = location("nbg1")
+    default_volume_location: Location = dataclasses.field(
+        default_factory=_default_volume_location
+    )
     default_volume_size: int = 10
     workers: int = 10
     scripts: str = os.path.join(current_dir, "..", "scripts")
